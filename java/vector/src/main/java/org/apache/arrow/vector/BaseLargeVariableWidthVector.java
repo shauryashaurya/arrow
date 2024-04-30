@@ -42,8 +42,7 @@ import org.apache.arrow.vector.util.TransferPair;
 /**
  * BaseLargeVariableWidthVector is a base class providing functionality for large strings/large bytes types.
  */
-public abstract class BaseLargeVariableWidthVector extends BaseValueVector
-    implements VariableWidthVector, FieldVector, VectorDefinitionSetter {
+public abstract class BaseLargeVariableWidthVector extends BaseValueVector implements VariableWidthFieldVector {
   private static final int DEFAULT_RECORD_BYTE_COUNT = 12;
   private static final int INITIAL_BYTE_COUNT = INITIAL_VALUE_ALLOCATION * DEFAULT_RECORD_BYTE_COUNT;
   private int lastValueCapacity;
@@ -763,16 +762,14 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    */
   public void splitAndTransferTo(int startIndex, int length,
                                  BaseLargeVariableWidthVector target) {
-    Preconditions.checkArgument(startIndex >= 0 && startIndex < valueCount,
-        "Invalid startIndex: %s", startIndex);
-    Preconditions.checkArgument(startIndex + length <= valueCount,
-        "Invalid length: %s", length);
+    Preconditions.checkArgument(startIndex >= 0 && length >= 0 && startIndex + length <= valueCount,
+        "Invalid parameters startIndex: %s, length: %s for valueCount: %s", startIndex, length, valueCount);
     compareTypes(target, "splitAndTransferTo");
     target.clear();
-    splitAndTransferValidityBuffer(startIndex, length, target);
-    splitAndTransferOffsetBuffer(startIndex, length, target);
-    target.setLastSet(length - 1);
     if (length > 0) {
+      splitAndTransferValidityBuffer(startIndex, length, target);
+      splitAndTransferOffsetBuffer(startIndex, length, target);
+      target.setLastSet(length - 1);
       target.setValueCount(length);
     }
   }
@@ -944,6 +941,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    *
    * @param index target index
    */
+  @Override
   public void fillEmpties(int index) {
     handleSafe(index, emptyByteArray.length);
     fillHoles(index);
@@ -957,6 +955,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    *
    * @param value desired index of last non-null element.
    */
+  @Override
   public void setLastSet(int value) {
     lastSet = value;
   }
@@ -966,6 +965,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    *
    * @return index of the last non-null element
    */
+  @Override
   public int getLastSet() {
     return lastSet;
   }
@@ -1005,6 +1005,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    * @param index   position of element to get
    * @return greater than 0 length for non-null element, 0 otherwise
    */
+  @Override
   public int getValueLength(int index) {
     assert index >= 0;
     if (isSet(index) == 0) {
@@ -1023,6 +1024,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    * @param index   position of the element to set
    * @param value   array of bytes to write
    */
+  @Override
   public void set(int index, byte[] value) {
     assert index >= 0;
     fillHoles(index);
@@ -1039,6 +1041,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    * @param index   position of the element to set
    * @param value   array of bytes to write
    */
+  @Override
   public void setSafe(int index, byte[] value) {
     assert index >= 0;
     handleSafe(index, value.length);
@@ -1057,6 +1060,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    * @param start   start index in array of bytes
    * @param length  length of data in array of bytes
    */
+  @Override
   public void set(int index, byte[] value, int start, int length) {
     assert index >= 0;
     fillHoles(index);
@@ -1093,6 +1097,7 @@ public abstract class BaseLargeVariableWidthVector extends BaseValueVector
    * @param start   start index in ByteBuffer
    * @param length  length of data in ByteBuffer
    */
+  @Override
   public void set(int index, ByteBuffer value, int start, int length) {
     assert index >= 0;
     fillHoles(index);
