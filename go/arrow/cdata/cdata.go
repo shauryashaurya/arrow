@@ -32,7 +32,11 @@ package cdata
 //	memset(out, 0, sizeof(struct ArrowArray));
 //	return out;
 // }
-// struct ArrowArrayStream* get_stream() { return (struct ArrowArrayStream*)malloc(sizeof(struct ArrowArrayStream)); }
+// struct ArrowArrayStream* get_stream() {
+//	struct ArrowArrayStream* out = (struct ArrowArrayStream*)malloc(sizeof(struct ArrowArrayStream));
+//	memset(out, 0, sizeof(struct ArrowArrayStream));
+//	return out;
+// }
 //
 import "C"
 
@@ -448,6 +452,7 @@ func (imp *cimporter) doImportArr(src *CArrowArray) error {
 	defer func() {
 		if imp.alloc.bufCount == 0 {
 			C.ArrowArrayRelease(imp.arr)
+			C.free(unsafe.Pointer(imp.arr))
 		}
 	}()
 

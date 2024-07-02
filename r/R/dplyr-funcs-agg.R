@@ -29,56 +29,56 @@
 # you can use list_compute_functions("^hash_")
 
 register_bindings_aggregate <- function() {
-  register_binding_agg("base::sum", function(..., na.rm = FALSE) {
+  register_binding("base::sum", function(..., na.rm = FALSE) {
     set_agg(
       fun = "sum",
       data = ensure_one_arg(list2(...), "sum"),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("base::prod", function(..., na.rm = FALSE) {
+  register_binding("base::prod", function(..., na.rm = FALSE) {
     set_agg(
       fun = "product",
       data = ensure_one_arg(list2(...), "prod"),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("base::any", function(..., na.rm = FALSE) {
+  register_binding("base::any", function(..., na.rm = FALSE) {
     set_agg(
       fun = "any",
       data = ensure_one_arg(list2(...), "any"),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("base::all", function(..., na.rm = FALSE) {
+  register_binding("base::all", function(..., na.rm = FALSE) {
     set_agg(
       fun = "all",
       data = ensure_one_arg(list2(...), "all"),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("base::mean", function(x, na.rm = FALSE) {
+  register_binding("base::mean", function(x, na.rm = FALSE) {
     set_agg(
       fun = "mean",
       data = list(x),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("stats::sd", function(x, na.rm = FALSE, ddof = 1) {
+  register_binding("stats::sd", function(x, na.rm = FALSE, ddof = 1) {
     set_agg(
       fun = "stddev",
       data = list(x),
       options = list(skip_nulls = na.rm, min_count = 0L, ddof = ddof)
     )
   })
-  register_binding_agg("stats::var", function(x, na.rm = FALSE, ddof = 1) {
+  register_binding("stats::var", function(x, na.rm = FALSE, ddof = 1) {
     set_agg(
       fun = "variance",
       data = list(x),
       options = list(skip_nulls = na.rm, min_count = 0L, ddof = ddof)
     )
   })
-  register_binding_agg(
+  register_binding(
     "stats::quantile",
     function(x, probs, na.rm = FALSE) {
       if (length(probs) != 1) {
@@ -103,7 +103,7 @@ register_bindings_aggregate <- function() {
       "approximate quantile (t-digest) is computed"
     )
   )
-  register_binding_agg(
+  register_binding(
     "stats::median",
     function(x, na.rm = FALSE) {
       # TODO: Bind to the Arrow function that returns an exact median and remove
@@ -122,28 +122,28 @@ register_bindings_aggregate <- function() {
     },
     notes = "approximate median (t-digest) is computed"
   )
-  register_binding_agg("dplyr::n_distinct", function(..., na.rm = FALSE) {
+  register_binding("dplyr::n_distinct", function(..., na.rm = FALSE) {
     set_agg(
       fun = "count_distinct",
       data = ensure_one_arg(list2(...), "n_distinct"),
       options = list(na.rm = na.rm)
     )
   })
-  register_binding_agg("dplyr::n", function() {
+  register_binding("dplyr::n", function() {
     set_agg(
       fun = "count_all",
       data = list(),
       options = list()
     )
   })
-  register_binding_agg("base::min", function(..., na.rm = FALSE) {
+  register_binding("base::min", function(..., na.rm = FALSE) {
     set_agg(
       fun = "min",
       data = ensure_one_arg(list2(...), "min"),
       options = list(skip_nulls = na.rm, min_count = 0L)
     )
   })
-  register_binding_agg("base::max", function(..., na.rm = FALSE) {
+  register_binding("base::max", function(..., na.rm = FALSE) {
     set_agg(
       fun = "max",
       data = ensure_one_arg(list2(...), "max"),
@@ -155,7 +155,7 @@ register_bindings_aggregate <- function() {
 set_agg <- function(...) {
   agg_data <- list2(...)
   # Find the environment where .aggregations is stored
-  target <- find_aggregations_env()
+  target <- find_arrow_mask()
   aggs <- get(".aggregations", target)
   lapply(agg_data[["data"]], function(expr) {
     # If any of the fields referenced in the expression are in .aggregations,
@@ -176,8 +176,8 @@ set_agg <- function(...) {
   Expression$field_ref(tmpname)
 }
 
-find_aggregations_env <- function() {
-  # Find the environment where .aggregations is stored,
+find_arrow_mask <- function() {
+  # Find the arrow_mask environment by looking for .aggregations,
   # it's in parent.env of something in the call stack
   n <- 1
   while (TRUE) {
